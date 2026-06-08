@@ -41,6 +41,9 @@ import {
   Scheduler,
   coverSecretKey,
   resolveCoverProviderPreset,
+  buildCustomCoverPreset,
+  isCustomCoverProvider,
+  CUSTOM_COVER_LABEL,
   type ResolvedModel,
   type PipelineConfig,
   type ProjectConfig,
@@ -666,10 +669,19 @@ function mergeServiceConfig(existing: ServiceConfigEntry[], updates: ServiceConf
   return [...merged.values()];
 }
 
-function normalizeCoverConfig(raw: unknown): { service: string; model: string } | undefined {
+function normalizeCoverConfig(raw: unknown): { service: string; model: string; baseUrl?: string; api?: "responses" | "images" | "gemini" } | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const record = raw as Record<string, unknown>;
   const service = typeof record.service === "string" ? record.service : "";
+  if (isCustomCoverProvider(service)) {
+    const baseUrl = typeof record.baseUrl === "string" ? record.baseUrl.trim() : "";
+    if (!baseUrl) return undefined;
+    const api = typeof record.api === "string" && ["responses", "images", "gemini"].includes(record.api)
+      ? (record.api as "responses" | "images" | "gemini")
+      : "images";
+    const model = typeof record.model === "string" ? record.model.trim() : "gpt-image-2";
+    return { service: "custom", model, baseUrl, api };
+  }
   const preset = resolveCoverProviderPreset(service);
   if (!preset) return undefined;
   const requestedModel = typeof record.model === "string" ? record.model.trim() : "";
@@ -1774,28 +1786,56 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string) {
     const llm = (config.llm as Record<string, unknown> | undefined) ?? {};
     const cover = normalizeCoverConfig(llm.cover);
     const secrets = await loadSecrets(root);
+    const providers = COVER_PROVIDER_PRESETS.map((provider) => ({
+      service: provider.service,
+      label: provider.label,
+      baseUrl: provider.baseUrl,
+      defaultModel: provider.defaultModel,
+      models: provider.models,
+      connected: Boolean(secrets.services[coverSecretKey(provider.service)]?.apiKey || secrets.services[provider.service]?.apiKey),
+    }));
+    const customApiKey = secrets.services[coverSecretKey("custom")]?.apiKey ?? "";
+    providers.push({
+      service: "custom",
+      label: CUSTOM_COVER_LABEL,
+      baseUrl: (cover?.service === "custom" && cover.baseUrl) || "",
+      defaultModel: (cover?.service === "custom" && cover.model) || "gpt-image-2",
+      models: [(cover?.service === "custom" && cover.model) || "gpt-image-2"],
+      connected: Boolean(customApiKey),
+    });
     return c.json({
       service: cover?.service ?? null,
       model: cover?.model ?? null,
-      providers: COVER_PROVIDER_PRESETS.map((provider) => ({
-        service: provider.service,
-        label: provider.label,
-        baseUrl: provider.baseUrl,
-        defaultModel: provider.defaultModel,
-        models: provider.models,
-        connected: Boolean(secrets.services[coverSecretKey(provider.service)]?.apiKey || secrets.services[provider.service]?.apiKey),
-      })),
+      baseUrl: cover?.service === "custom" ? (cover.baseUrl ?? null) : null,
+      api: cover?.service === "custom" ? (cover.api ?? "images") : null,
+      providers,
     });
   });
 
   app.put("/api/v1/cover/config", async (c) => {
-    const body = await c.req.json<{ service?: string; model?: string }>();
+    const body = await c.req.json<{ service?: string; model?: string; baseUrl?: string; api?: string }>();
+    if (isCustomCoverProvider(body.service ?? "")) {
+      const baseUrl = typeof body.baseUrl === "string" ? body.baseUrl.trim() : "";
+      if (!baseUrl) {
+        return c.json({ error: "baseUrl is required for custom cover provider" }, 400);
+      }
+      const api = typeof body.api === "string" && ["responses", "images", "gemini"].includes(body.api)
+        ? body.api
+        : "images";
+      const model = typeof body.model === "string" && body.model.trim() ? body.model.trim() : "gpt-image-2";
+      const config = await loadRawConfig(root);
+      config.llm = config.llm ?? {};
+      const llm = config.llm as Record<string, unknown>;
+      llm.cover = { service: "custom", baseUrl, api, model };
+      await saveRawConfig(root, config);
+      return c.json({ ok: true, service: "custom", baseUrl, api, model });
+    }
     const preset = resolveCoverProviderPreset(body.service);
     if (!preset) {
       return c.json({ error: "Unsupported cover service" }, 400);
     }
-    const model = typeof body.model === "string" && preset.models.includes(body.model)
-      ? body.model
+    const model = typeof body.model === "string" && body.model.trim()
+      ? body.model.trim()
       : preset.defaultModel;
 
     const config = await loadRawConfig(root);
@@ -1811,7 +1851,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string) {
 
   app.get("/api/v1/cover/secret/:service", async (c) => {
     const service = c.req.param("service");
-    if (!resolveCoverProviderPreset(service)) {
+    if (!resolveCoverProviderPreset(service) && !isCustomCoverProvider(service)) {
       return c.json({ error: "Unsupported cover service" }, 400);
     }
     const secrets = await loadSecrets(root);
@@ -1820,7 +1860,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string) {
 
   app.put("/api/v1/cover/secret/:service", async (c) => {
     const service = c.req.param("service");
-    if (!resolveCoverProviderPreset(service)) {
+    if (!resolveCoverProviderPreset(service) && !isCustomCoverProvider(service)) {
       return c.json({ error: "Unsupported cover service" }, 400);
     }
     const body = await c.req.json<{ apiKey?: string }>();

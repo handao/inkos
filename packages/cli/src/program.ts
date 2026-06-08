@@ -27,9 +27,15 @@ import { fanficCommand } from "./commands/fanfic.js";
 import { shortCommand } from "./commands/short-fiction.js";
 import { createStudioCommand, launchStudioEntry } from "./commands/studio.js";
 import { consolidateCommand } from "./commands/consolidate.js";
+import { serverCommand } from "./commands/server.js";
 import { createInteractCommand, type InteractCommandHooks } from "./commands/interact.js";
 import { createTuiCommand } from "./commands/tui.js";
 import { launchTui } from "./tui/app.js";
+import { chapterCommand } from "./commands/chapter.js";
+import { llmCommand } from "./commands/llm.js";
+import { sessionCommand } from "./commands/session.js";
+import { adminCommand } from "./commands/admin.js";
+import { log, logError } from "./utils.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };
@@ -39,6 +45,18 @@ export interface ProgramHooks {
   readonly launchStudio?: (projectRoot: string, port: string) => Promise<void> | void;
   readonly runInteraction?: InteractCommandHooks["runInteraction"];
   readonly readInteractionInput?: InteractCommandHooks["readInput"];
+}
+
+async function checkBackendHealth(url: string): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(`${url.replace(/\/+$/, "")}/health`, { signal: controller.signal });
+    clearTimeout(timeout);
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 export function createProgram(hooks: ProgramHooks = {}): Command {
@@ -56,6 +74,22 @@ export function createProgram(hooks: ProgramHooks = {}): Command {
     .option("--api-format <chat|responses>", "Override LLM API format for this CLI run")
     .option("--stream", "Force streaming LLM responses for this CLI run")
     .option("--no-stream", "Force non-streaming LLM responses for this CLI run")
+    .option("--backend <url>", "Use Java backend server at the given URL (e.g. http://localhost:8080)")
+    .hook("preAction", async (thisCommand, actionCommand) => {
+      const opts = actionCommand.optsWithGlobals();
+      const backendUrl = opts.backend as string | undefined;
+      if (backendUrl) {
+        const healthy = await checkBackendHealth(backendUrl);
+        if (!healthy) {
+          logError(
+            `Backend server at ${backendUrl} is not reachable.\n` +
+            `  Start it with: inkos server start\n` +
+            `  Or check status: inkos server status`,
+          );
+          process.exit(1);
+        }
+      }
+    })
     .action(async () => {
       await launchStudioEntry(process.cwd(), "4567", { launchStudio: hooks.launchStudio });
     });
@@ -88,11 +122,16 @@ export function createProgram(hooks: ProgramHooks = {}): Command {
   program.addCommand(shortCommand);
   program.addCommand(createStudioCommand({ launchStudio: hooks.launchStudio }));
   program.addCommand(consolidateCommand);
+  program.addCommand(serverCommand);
   program.addCommand(createInteractCommand({
     runInteraction: hooks.runInteraction,
     readInput: hooks.readInteractionInput,
   }));
   program.addCommand(createTuiCommand({ launchTui: hooks.launchTui }));
+  program.addCommand(chapterCommand);
+  program.addCommand(llmCommand);
+  program.addCommand(sessionCommand);
+  program.addCommand(adminCommand);
 
   return program;
 }

@@ -10,10 +10,18 @@ const LLMServiceEntrySchema = z.object({
   stream: z.boolean().optional(),
 });
 
-const LLMCoverConfigSchema = z.object({
-  service: z.enum(["kkaiapi", "openai", "google"]),
-  model: z.string().min(1),
-}).optional();
+const LLMCoverConfigSchema = z.discriminatedUnion("service", [
+  z.object({
+    service: z.enum(["kkaiapi", "openai", "google"]),
+    model: z.string().min(1),
+  }),
+  z.object({
+    service: z.literal("custom"),
+    baseUrl: z.string().url(),
+    api: z.enum(["responses", "images", "gemini"]).default("images"),
+    model: z.string().min(1).default("gpt-image-2"),
+  }),
+]).optional();
 
 // C1 (v2.0.0 breaking): 删除 maxTokens / maxTokensCap 字段。
 // 每个模型的真实 maxOutput 来自 providers/<name>.ts 的 InkosModel.maxOutput；

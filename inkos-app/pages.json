@@ -1,0 +1,39 @@
+{
+  "pages": [
+    {"path": "pages/auth/login", "style": {"navigationBarTitleText": "登录", "navigationStyle": "custom"}},
+    {"path": "pages/auth/register", "style": {"navigationBarTitleText": "注册", "navigationStyle": "custom"}},
+    {"path": "pages/index/index", "style": {"navigationBarTitleText": "InkOS", "enablePullDownRefresh": true}},
+    {"path": "pages/library/index", "style": {"navigationBarTitleText": "文库", "enablePullDownRefresh": true}},
+    {"path": "pages/library/detail", "style": {"navigationBarTitleText": "作品详情"}},
+    {"path": "pages/analytics/index", "style": {"navigationBarTitleText": "数据分析"}},
+    {"path": "pages/profile/index", "style": {"navigationBarTitleText": "个人中心"}},
+    {"path": "pages/settings/index", "style": {"navigationBarTitleText": "设置"}},
+    {"path": "pages/settings/services", "style": {"navigationBarTitleText": "LLM 服务配置"}},
+    {"path": "pages/workspace/index", "style": {"navigationBarTitleText": "AI 写作工作台"}},
+    {"path": "pages/admin/index", "style": {"navigationBarTitleText": "管理中心"}},
+    {"path": "pages/admin/users", "style": {"navigationBarTitleText": "用户管理"}},
+    {"path": "pages/admin/whitelist", "style": {"navigationBarTitleText": "白名单管理"}},
+    {"path": "pages/reader/reader", "style": {"navigationBarTitleText": "", "navigationStyle": "custom"}},
+    {"path": "pages/search/search", "style": {"navigationBarTitleText": "搜索", "navigationStyle": "custom"}},
+    {"path": "pages/create/create", "style": {"navigationBarTitleText": "新建作品"}}
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "InkOS",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f5f5f5",
+    "usingComponents": true
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#3b82f6",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {"pagePath": "pages/index/index", "iconPath": "static/tab-home.svg", "selectedIconPath": "static/tab-home-active.svg", "text": "首页"},
+      {"pagePath": "pages/library/index", "iconPath": "static/tab-library.svg", "selectedIconPath": "static/tab-library-active.svg", "text": "文库"},
+      {"pagePath": "pages/analytics/index", "iconPath": "static/tab-analytics.svg", "selectedIconPath": "static/tab-analytics-active.svg", "text": "分析"},
+      {"pagePath": "pages/profile/index", "iconPath": "static/tab-profile.svg", "selectedIconPath": "static/tab-profile-active.svg", "text": "我的"}
+    ]
+  }
+}

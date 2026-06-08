@@ -13,7 +13,6 @@ test-project/
 .venv*/
 .gstack/
 .worktrees/
-docs/*
 novel-to-comic-research.docx
 .pnpm-store/
 tmp/
@@ -28,3 +27,13 @@ books/
 inkos.json
 prompt/
 CLAUDE.md
+genres/
+
+# Java/Maven 构建产物
+inkos-server/target/
+inkos-server/logs/
+*.iml
+.idea/
+
+# 设计文档（不属于项目代码，可忽略）
+docs/superpowers/

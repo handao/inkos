@@ -1,0 +1,31 @@
+package com.inkos.core.llm.endpoint;
+
+import static com.inkos.core.llm.EndpointConfig.ModelCard.builder;
+import com.inkos.core.llm.EndpointConfig;
+import java.util.List;
+
+public final class QiniuEndpoints {
+
+  public static EndpointConfig getEndpoint() {
+    return EndpointConfig.builder()
+      .id("qiniu").label("七牛云 AI").group("aggregator").api("openai-completions")
+      .baseUrl("https://api.qnaigc.com/v1")
+      .checkModel("deepseek-v3")
+      .temperatureRange(0, 2).defaultTemperature(0.7).writingTemperature(1.0)
+      .addModels(
+        builder().id("deepseek-v3").maxOutput(4096).contextWindowTokens(131072).build(),
+        builder().id("deepseek-r1").maxOutput(4096).contextWindowTokens(65536).build(),
+        builder().id("minimax/minimax-m2.1").maxOutput(131072).contextWindowTokens(204800).releasedAt("2025-12-24").build(),
+        builder().id("minimax/minimax-m2").maxOutput(131072).contextWindowTokens(204800).releasedAt("2025-10-27").build(),
+        builder().id("deepseek/deepseek-math-v2").maxOutput(131072).contextWindowTokens(163840).releasedAt("2025-11-27").build(),
+        builder().id("meituan/longcat-flash-chat").maxOutput(65536).contextWindowTokens(131072).releasedAt("2025-09-01").build(),
+        builder().id("z-ai/glm-4.7").maxOutput(128000).contextWindowTokens(200000).releasedAt("2025-12-23").build(),
+        builder().id("z-ai/glm-4.6").maxOutput(128000).contextWindowTokens(200000).releasedAt("2025-09-30").build(),
+        builder().id("x-ai/grok-4-fast").maxOutput(4096).contextWindowTokens(2000000).releasedAt("2025-09-09").build(),
+        builder().id("x-ai/grok-code-fast-1").maxOutput(4096).contextWindowTokens(256000).releasedAt("2025-08-27").build()
+      )
+      .build();
+  }
+
+  private QiniuEndpoints() {}
+}

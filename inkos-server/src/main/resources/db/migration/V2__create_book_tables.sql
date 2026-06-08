@@ -12,7 +12,7 @@ CREATE TABLE book (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_book_user (user_id),
-    FOREIGN KEY (user_id) REFERENCES user(id)
+    FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE chapter (
@@ -30,7 +30,7 @@ CREATE TABLE chapter (
     INDEX idx_chapter_book (book_id),
     INDEX idx_chapter_user (user_id),
     FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(id)
+    FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE truth_file (
@@ -44,5 +44,5 @@ CREATE TABLE truth_file (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_truth_path (book_id, file_path),
     FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(id)
+    FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

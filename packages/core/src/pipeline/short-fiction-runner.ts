@@ -22,7 +22,7 @@ import {
   type ShortFictionReference,
   type ShortFictionSalesPackage,
 } from "../agents/short-fiction.js";
-import { coverSecretKey, resolveCoverProviderPreset, type CoverProviderPreset } from "../llm/cover-providers.js";
+import { coverSecretKey, isCustomCoverProvider, resolveCoverProviderPreset, type CoverProviderPreset } from "../llm/cover-providers.js";
 import { loadSecrets } from "../llm/secrets.js";
 import { safeChildPath } from "../utils/path-safety.js";
 
@@ -423,6 +423,19 @@ export async function resolveCoverGenerationRequest(input: {
     throw new Error("cover endpoint is required. Configure cover generation in Studio or set INKOS_COVER_BASE_URL.");
   }
 
+  if (isCustomCoverProvider(projectCover.service)) {
+    const apiKey = await resolveProjectCoverApiKey(input.root, "custom");
+    if (!apiKey) {
+      throw new Error("Cover API key is required for custom provider.");
+    }
+    return {
+      api: projectCover.api ?? "images",
+      baseUrl: projectCover.baseUrl ?? "",
+      model: input.coverModel || projectCover.model || "gpt-image-2",
+      apiKey,
+    };
+  }
+
   const preset = resolveCoverProviderPreset(projectCover.service);
   if (!preset) {
     throw new Error(`Unsupported cover service: ${projectCover.service}`);
@@ -440,18 +453,35 @@ export async function resolveCoverGenerationRequest(input: {
   };
 }
 
-async function readProjectCoverConfig(root: string): Promise<{ readonly service: string; readonly model?: string } | undefined> {
+async function readProjectCoverConfig(root: string): Promise<{
+  readonly service: string;
+  readonly model?: string;
+  readonly baseUrl?: string;
+  readonly api?: "responses" | "images" | "gemini";
+} | undefined> {
   try {
     const raw = await readFile(join(root, "inkos.json"), "utf-8");
-    const parsed = JSON.parse(raw) as { llm?: { cover?: { service?: unknown; model?: unknown } } };
+    const parsed = JSON.parse(raw) as {
+      llm?: { cover?: { service?: unknown; model?: unknown; baseUrl?: unknown; api?: unknown } };
+    };
     const service = typeof parsed.llm?.cover?.service === "string" ? parsed.llm.cover.service : "";
     if (!service) return undefined;
-    return {
-      service,
-      ...(typeof parsed.llm?.cover?.model === "string" && parsed.llm.cover.model.trim()
-        ? { model: parsed.llm.cover.model.trim() }
-        : {}),
-    };
+    const result: {
+      service: string;
+      model?: string;
+      baseUrl?: string;
+      api?: "responses" | "images" | "gemini";
+    } = { service };
+    if (typeof parsed.llm?.cover?.model === "string" && parsed.llm.cover.model.trim()) {
+      result.model = parsed.llm.cover.model.trim();
+    }
+    if (typeof parsed.llm?.cover?.baseUrl === "string" && parsed.llm.cover.baseUrl.trim()) {
+      result.baseUrl = parsed.llm.cover.baseUrl.trim();
+    }
+    if (typeof parsed.llm?.cover?.api === "string" && ["responses", "images", "gemini"].includes(parsed.llm.cover.api)) {
+      result.api = parsed.llm.cover.api as "responses" | "images" | "gemini";
+    }
+    return result;
   } catch {
     return undefined;
   }

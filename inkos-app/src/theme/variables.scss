@@ -1,0 +1,45 @@
+$text-primary: #1a1a2e;
+$text-secondary: #4a4a6a;
+$text-tertiary: #8e8ea0;
+$text-placeholder: #b0b0c0;
+$text-inverse: #ffffff;
+
+$bg-primary: #f5f5f8;
+$bg-secondary: #ffffff;
+$bg-tertiary: #e8e8ee;
+$bg-card: #ffffff;
+
+$accent-primary: #3b82f6;
+$accent-secondary: #6366f1;
+$accent-warm: #f59e0b;
+$accent-danger: #ef4444;
+$accent-success: #10b981;
+
+$border-light: #e5e7eb;
+$border-medium: #d1d5db;
+
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+$radius-sm: 8rpx;
+$radius-md: 16rpx;
+$radius-lg: 24rpx;
+$radius-xl: 32rpx;
+
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-md: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
+
+$font-xs: 24rpx;
+$font-sm: 26rpx;
+$font-base: 28rpx;
+$font-md: 30rpx;
+$font-lg: 34rpx;
+$font-xl: 40rpx;
+$font-2xl: 48rpx;
+
+$safe-bottom: env(safe-area-inset-bottom);
+$safe-top: env(safe-area-inset-top);

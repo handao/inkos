@@ -13,7 +13,7 @@ public class RegisterRequest {
     private String code;
 
     @NotBlank(message = "密码不能为空")
-    @Size(min = 6, max = 100, message = "密码长度6-100位")
+    @Size(min = 8, max = 100, message = "密码长度8-100位")
     private String password;
 
     @NotBlank(message = "昵称不能为空")

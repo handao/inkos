@@ -20,7 +20,8 @@ public class BusinessException extends RuntimeException {
         return switch (errorCode) {
             case BAD_REQUEST, EMAIL_ALREADY_REGISTERED, EMAIL_NOT_ALLOWED,
                  VERIFICATION_CODE_INVALID, VERIFICATION_CODE_TOO_FREQUENT,
-                 SERVICE_CONFIG_INVALID -> 400;
+                 SERVICE_CONFIG_INVALID, INVALID_EMAIL, INVALID_CODE, INVALID_PASSWORD,
+                 CONFLICT -> 400;
             case UNAUTHORIZED, INVALID_CREDENTIALS -> 401;
             case FORBIDDEN, USER_DISABLED -> 403;
             case NOT_FOUND -> 404;

@@ -1,0 +1,16 @@
+{
+  "name": "InkOS",
+  "appid": "__UNI__INNOS",
+  "version": {
+    "name": "1.0.0",
+    "code": "100"
+  },
+  "description": "AI Novel Writing Platform",
+  "uni-app": {
+    "h5": {
+      "router": {
+        "mode": "hash"
+      }
+    }
+  }
+}

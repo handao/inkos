@@ -75,7 +75,7 @@ class AuthServiceTest {
         RegisterRequest req = new RegisterRequest();
         req.setEmail("test@test.com");
         req.setCode("wrong");
-        req.setPassword("pass123");
+        req.setPassword("Pass1234");
         req.setNickname("Test");
         when(verificationCodeRepository
                 .findTopByEmailAndTypeAndUsedFalseOrderByCreatedAtDesc("test@test.com", "REGISTER"))
@@ -88,7 +88,7 @@ class AuthServiceTest {
         RegisterRequest req = new RegisterRequest();
         req.setEmail("test@test.com");
         req.setCode("123456");
-        req.setPassword("pass123");
+        req.setPassword("Pass1234");
         req.setNickname("Test");
         VerificationCode vc = VerificationCode.builder()
                 .email("test@test.com").code("123456").type("REGISTER")

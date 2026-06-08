@@ -276,6 +276,11 @@ export {
   COVER_PROVIDER_PRESETS,
   coverSecretKey,
   resolveCoverProviderPreset,
+  buildCustomCoverPreset,
+  isCustomCoverProvider,
+  CUSTOM_COVER_LABEL,
+  CUSTOM_COVER_DEFAULT_MODEL,
+  CUSTOM_COVER_DEFAULT_API,
   type CoverProviderId,
   type CoverProviderPreset,
 } from "./llm/cover-providers.js";

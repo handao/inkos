@@ -14,6 +14,10 @@ public enum ErrorCode {
     VERIFICATION_CODE_TOO_FREQUENT(40904, "验证码发送太频繁"),
     USER_DISABLED(40905, "账户已被禁用"),
     INVALID_CREDENTIALS(40101, "邮箱或密码错误"),
+    INVALID_EMAIL(40001, "邮箱格式不正确"),
+    INVALID_CODE(40002, "验证码错误"),
+    INVALID_PASSWORD(40003, "密码格式不正确"),
+    CONFLICT(40900, "资源冲突"),
     SERVICE_CONFIG_INVALID(42201, "服务配置无效"),
     RATE_LIMITED(42900, "请求太频繁"),
     INTERNAL_ERROR(50000, "服务器内部错误");

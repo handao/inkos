@@ -1,5 +1,6 @@
 package com.inkos.service;
 
+import com.inkos.common.PasswordValidator;
 import com.inkos.dto.request.*;
 import com.inkos.dto.response.*;
 import com.inkos.entity.*;
@@ -61,6 +62,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        PasswordValidator.validate(request.getPassword());
         VerificationCode vc = verificationCodeRepository
                 .findTopByEmailAndTypeAndUsedFalseOrderByCreatedAtDesc(request.getEmail(), "REGISTER")
                 .orElseThrow(() -> new BusinessException(ErrorCode.VERIFICATION_CODE_INVALID));

@@ -62,6 +62,8 @@ interface CoverProviderInfo {
 interface CoverConfigPayload {
   readonly service: string | null;
   readonly model: string | null;
+  readonly baseUrl?: string | null;
+  readonly api?: string | null;
   readonly providers: readonly CoverProviderInfo[];
 }
 
@@ -69,11 +71,14 @@ function CoverConfigCard() {
   const [providers, setProviders] = useState<readonly CoverProviderInfo[]>([]);
   const [service, setService] = useState("kkaiapi");
   const [model, setModel] = useState("gpt-image-2");
+  const [customBaseUrl, setCustomBaseUrl] = useState("");
+  const [customApi, setCustomApi] = useState("images");
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "saved" | "error">("loading");
   const [message, setMessage] = useState("");
 
+  const isCustom = service === "custom";
   const selected = providers.find((provider) => provider.service === service);
 
   useEffect(() => {
@@ -86,6 +91,10 @@ function CoverConfigCard() {
         const provider = payload.providers.find((item) => item.service === nextService) ?? payload.providers[0];
         setService(nextService);
         setModel(payload.model ?? provider?.defaultModel ?? "gpt-image-2");
+        if (nextService === "custom") {
+          setCustomBaseUrl(payload.baseUrl ?? "");
+          setCustomApi(payload.api ?? "images");
+        }
         setStatus("idle");
       })
       .catch((error) => {
@@ -110,14 +119,6 @@ function CoverConfigCard() {
     return () => { cancelled = true; };
   }, [service]);
 
-  const handleServiceChange = (nextService: string) => {
-    const provider = providers.find((item) => item.service === nextService);
-    setService(nextService);
-    setModel(provider?.defaultModel ?? "gpt-image-2");
-    setStatus("idle");
-    setMessage("");
-  };
-
   const handleSave = async () => {
     const provider = selected;
     if (!provider) return;
@@ -129,11 +130,24 @@ function CoverConfigCard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ apiKey: apiKey.trim() }),
       });
-      await fetchJson("/cover/config", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ service: provider.service, model }),
-      });
+      if (isCustom) {
+        await fetchJson("/cover/config", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            service: "custom",
+            baseUrl: customBaseUrl.trim(),
+            api: customApi,
+            model,
+          }),
+        });
+      } else {
+        await fetchJson("/cover/config", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ service: provider.service, model }),
+        });
+      }
       setStatus("saved");
       setMessage("封面配置已保存");
     } catch (error) {
@@ -165,7 +179,11 @@ function CoverConfigCard() {
           <span className="block text-xs font-medium text-muted-foreground/70">服务</span>
           <select
             value={service}
-            onChange={(event) => handleServiceChange(event.target.value)}
+            onChange={(event) => {
+              setService(event.target.value);
+              setStatus("idle");
+              setMessage("");
+            }}
             className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-sm"
           >
             {providers.map((provider) => (
@@ -175,17 +193,42 @@ function CoverConfigCard() {
         </label>
         <label className="space-y-1.5">
           <span className="block text-xs font-medium text-muted-foreground/70">封面模型</span>
-          <select
+          <input
+            type="text"
             value={model}
             onChange={(event) => setModel(event.target.value)}
+            placeholder={selected?.defaultModel ?? "gpt-image-2"}
             className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-sm"
-          >
-            {(selected?.models ?? [model]).map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
+          />
         </label>
       </div>
+
+      {isCustom && (
+        <>
+          <label className="space-y-1.5">
+            <span className="block text-xs font-medium text-muted-foreground/70">Base URL</span>
+            <input
+              type="text"
+              value={customBaseUrl}
+              onChange={(event) => setCustomBaseUrl(event.target.value)}
+              placeholder="https://api.example.com/v1"
+              className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-sm font-mono"
+            />
+          </label>
+          <label className="space-y-1.5">
+            <span className="block text-xs font-medium text-muted-foreground/70">API 类型</span>
+            <select
+              value={customApi}
+              onChange={(event) => setCustomApi(event.target.value)}
+              className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-sm"
+            >
+              <option value="images">OpenAI /v1/images/generations</option>
+              <option value="responses">OpenAI /v1/responses</option>
+              <option value="gemini">Gemini generateContent</option>
+            </select>
+          </label>
+        </>
+      )}
 
       <label className="space-y-1.5">
         <span className="block text-xs font-medium text-muted-foreground/70">API Key</span>
@@ -210,15 +253,20 @@ function CoverConfigCard() {
       <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={handleSave}
-          disabled={status === "saving" || !selected}
+          disabled={status === "saving" || !selected || (isCustom && !customBaseUrl.trim())}
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {status === "saving" && <Loader2 size={12} className="animate-spin" />}
           保存封面配置
         </button>
-        {selected?.baseUrl && (
+        {selected?.baseUrl && !isCustom && (
           <span className="text-xs text-muted-foreground/60">
             Base URL: <span className="font-mono">{selected.baseUrl}</span>
+          </span>
+        )}
+        {isCustom && customBaseUrl && (
+          <span className="text-xs text-muted-foreground/60">
+            Base URL: <span className="font-mono">{customBaseUrl}</span>
           </span>
         )}
         {message && (
