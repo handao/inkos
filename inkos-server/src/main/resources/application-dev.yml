@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/inkos_dev?createDatabaseIfNotExist=true
+    password: root
+  jpa:
+    show-sql: true
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: your-email@qq.com
+    password: your-smtp-password
+
+inkos:
+  jwt:
+    secret: dev-secret-key-please-change-in-production
