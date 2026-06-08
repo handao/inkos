@@ -35,5 +35,4 @@ inkos-server/logs/
 *.iml
 .idea/
 
-# 设计文档（不属于项目代码，可忽略）
-docs/superpowers/
+
